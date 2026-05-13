@@ -10,35 +10,63 @@ export default function Dashboard() {
     api("/api/salons/me").then(setSalon).catch(e => setErr(e.message));
   }, []);
 
-  if (err) return <div className="text-red-600">{err}</div>;
-  if (!salon) return <div>Loading…</div>;
+  if (err) return <div className="text-red-700">{err}</div>;
+  if (!salon) return <div className="text-stone-500">Loading…</div>;
+
+  const needsAgreement = !salon.member_agreement_accepted_at;
+  const needsSub = salon.subscription_status !== "active" && salon.subscription_status !== "trialing";
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Welcome, {salon.business_name}</h1>
-      <div className="grid grid-cols-2 gap-4">
-        <Card title="Subscription" value={salon.subscription_status} />
-        <Card title="ABN" value={salon.abn} />
+    <div className="space-y-8">
+      <div>
+        <div className="text-xs uppercase tracking-[0.2em] text-stone-500">Welcome back</div>
+        <h1 className="text-4xl mt-1">{salon.business_name}</h1>
       </div>
-      {!salon.member_agreement_accepted_at && (
-        <div className="bg-amber-50 border border-amber-200 p-4 rounded">
-          You must accept the Member Agreement before logging incidents.
-          <Link to="/settings" className="ml-2 underline">Go to settings</Link>
+
+      {(needsAgreement || needsSub) && (
+        <div className="card p-5 border-amber-200 bg-amber-50">
+          <div className="font-medium mb-1">Finish setting up your account</div>
+          <ul className="text-sm text-stone-700 list-disc list-inside space-y-1">
+            {needsAgreement && <li>Accept the Member Agreement</li>}
+            {needsSub && <li>Activate your subscription</li>}
+          </ul>
+          <Link to="/settings" className="btn-accent mt-4">Go to settings</Link>
         </div>
       )}
-      <div className="flex gap-3">
-        <Link to="/search" className="bg-stone-900 text-white px-4 py-2 rounded">Search a client</Link>
-        <Link to="/incidents/new" className="bg-stone-200 px-4 py-2 rounded">Log an incident</Link>
+
+      <div className="grid grid-cols-3 gap-4">
+        <Stat label="Subscription" value={salon.subscription_status} />
+        <Stat label="ABN" value={salon.abn} mono />
+        <Stat label="Verified entity" value={salon.abn_entity_name || "Pending"} />
+      </div>
+
+      <div className="card p-6">
+        <h2 className="text-lg mb-3">Quick actions</h2>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/search" className="btn-primary">⌕  Search a client</Link>
+          <Link to="/incidents/new" className="btn-secondary">＋ Log an incident</Link>
+          <Link to="/disputes" className="btn-secondary">⚑ Review disputes</Link>
+        </div>
+      </div>
+
+      <div className="card p-6">
+        <h2 className="text-lg mb-2">Network etiquette</h2>
+        <ul className="text-sm text-stone-700 space-y-1 list-disc list-inside">
+          <li>Only log clients who consented under your booking T&Cs</li>
+          <li>Stick to the structured incident types — no opinion or characterisation</li>
+          <li>Attach evidence (invoice, booking record, comms) to every entry</li>
+          <li>Respond to disputes within 14 days</li>
+        </ul>
       </div>
     </div>
   );
 }
 
-function Card({ title, value }) {
+function Stat({ label, value, mono }) {
   return (
-    <div className="bg-white border border-stone-200 rounded p-4">
-      <div className="text-xs uppercase tracking-wide text-stone-500">{title}</div>
-      <div className="text-lg">{value}</div>
+    <div className="card p-4">
+      <div className="text-[10px] uppercase tracking-[0.18em] text-stone-500">{label}</div>
+      <div className={`text-lg mt-1 ${mono ? "font-mono" : ""}`}>{value}</div>
     </div>
   );
 }

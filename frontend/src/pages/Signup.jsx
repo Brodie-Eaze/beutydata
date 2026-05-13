@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api, setToken } from "../api";
 
 export default function Signup() {
@@ -7,37 +7,69 @@ export default function Signup() {
     business_name: "", abn: "", address: "", phone: "", email: "", password: "",
   });
   const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
   const nav = useNavigate();
   const upd = k => e => setF({ ...f, [k]: e.target.value });
 
   async function submit(e) {
     e.preventDefault();
-    setErr("");
+    setErr(""); setBusy(true);
     try {
       const r = await api("/api/auth/signup", { method: "POST", body: f, auth: false });
       setToken(r.access_token);
       nav("/settings");
     } catch (e) { setErr(e.message); }
+    finally { setBusy(false); }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50 py-12">
-      <form onSubmit={submit} className="bg-white p-8 rounded-lg shadow w-full max-w-md space-y-4">
-        <h1 className="text-xl font-semibold">Apply for membership</h1>
-        <p className="text-sm text-stone-600">
-          We verify all members via the Australian Business Register. By signing up,
-          you agree to the Member Agreement and undertake to publish the consent clause
-          in your booking terms before logging any incident.
+    <div className="min-h-screen flex items-center justify-center py-12 px-4">
+      <div className="w-full max-w-lg card p-8">
+        <div className="text-xs uppercase tracking-[0.2em] text-stone-500 mb-2">Membership</div>
+        <h1 className="text-3xl mb-2">Apply to join</h1>
+        <p className="text-sm text-stone-600 mb-6">
+          We verify all members via the Australian Business Register. By
+          applying you agree to the Member Agreement and undertake to publish
+          the consent clause in your booking T&Cs before logging incidents.
         </p>
-        {err && <div className="text-red-600 text-sm">{err}</div>}
-        <input className="w-full border rounded px-3 py-2" placeholder="Business name" value={f.business_name} onChange={upd("business_name")} />
-        <input className="w-full border rounded px-3 py-2" placeholder="ABN (11 digits)" value={f.abn} onChange={upd("abn")} />
-        <input className="w-full border rounded px-3 py-2" placeholder="Business address" value={f.address} onChange={upd("address")} />
-        <input className="w-full border rounded px-3 py-2" placeholder="Business phone" value={f.phone} onChange={upd("phone")} />
-        <input className="w-full border rounded px-3 py-2" placeholder="Owner email" value={f.email} onChange={upd("email")} />
-        <input className="w-full border rounded px-3 py-2" placeholder="Password (min 8 chars)" type="password" value={f.password} onChange={upd("password")} />
-        <button className="w-full bg-stone-900 text-white py-2 rounded">Create account</button>
-      </form>
+        {err && <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">{err}</div>}
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="label">Business name</label>
+            <input className="input" value={f.business_name} onChange={upd("business_name")} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">ABN</label>
+              <input className="input" placeholder="11 digits" value={f.abn} onChange={upd("abn")} />
+            </div>
+            <div>
+              <label className="label">Business phone</label>
+              <input className="input" value={f.phone} onChange={upd("phone")} />
+            </div>
+          </div>
+          <div>
+            <label className="label">Business address</label>
+            <input className="input" value={f.address} onChange={upd("address")} />
+          </div>
+          <div className="border-t border-stone-200 pt-4">
+            <div>
+              <label className="label">Owner email</label>
+              <input className="input" value={f.email} onChange={upd("email")} />
+            </div>
+            <div className="mt-4">
+              <label className="label">Password</label>
+              <input className="input" type="password" placeholder="Min 8 characters" value={f.password} onChange={upd("password")} />
+            </div>
+          </div>
+          <button className="btn-primary w-full" disabled={busy}>
+            {busy ? "Verifying ABN…" : "Create account"}
+          </button>
+          <div className="text-sm text-stone-600 text-center">
+            Already a member? <Link to="/login" className="underline">Sign in</Link>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

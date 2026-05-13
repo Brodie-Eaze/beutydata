@@ -2,13 +2,17 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from .config import settings
 
-_client: AsyncIOMotorClient | None = None
+_client = None
 
 
-def get_client() -> AsyncIOMotorClient:
+def get_client():
     global _client
     if _client is None:
-        _client = AsyncIOMotorClient(settings.MONGO_URL)
+        if settings.MONGO_URL.startswith("memory://"):
+            from mongomock_motor import AsyncMongoMockClient
+            _client = AsyncMongoMockClient()
+        else:
+            _client = AsyncIOMotorClient(settings.MONGO_URL)
     return _client
 
 
